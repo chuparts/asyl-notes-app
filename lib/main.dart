@@ -38,7 +38,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Center(child: Text(widget.title)),
+          title: Text(widget.title),
+          leading: currentNoteIndex >= 0 ? IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => setState(() {
+                currentNoteIndex = -1;
+            }),
+          ) : const SizedBox.shrink()
         ),
         floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.green,
