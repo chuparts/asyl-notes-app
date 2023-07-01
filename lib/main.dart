@@ -40,49 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Center(child: Text(widget.title)),
       ),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
-            child: GridView.builder(
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 200, 
-                      childAspectRatio: 3 / 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10),
-                  itemCount: noteList.length,
-                  itemBuilder: (BuildContext ctx, index) {
-                    // return Container(
-                    //   alignment: Alignment.center,
-                    //   decoration: BoxDecoration(
-                    //     gradient: const LinearGradient(colors: [Color.fromARGB(255, 172, 218, 119), Colors.lightGreen]),
-                    //       //color: Colors.green[200],
-                    //       borderRadius: BorderRadius.circular(15)),
-                    //   child: Text("#$noteNum"),
-                    // );
-                    return Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      child: InkWell(
-                        onTap: () {print("lol");},
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(noteList[index].title),
-                        ),
-                      )
-                    );
-                  }
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(40.0),
-                    child: FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
                         backgroundColor: Colors.green,
                         onPressed: () {
                             setState(() {
@@ -91,12 +49,29 @@ class _MyHomePageState extends State<MyHomePage> {
                         },
                         child: const Icon(Icons.plus_one),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          )
-        ],
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
+        child: GridView.builder(
+          shrinkWrap: true,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 200, 
+                  childAspectRatio: 3 / 2,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10),
+              itemCount: noteList.length,
+              itemBuilder: (BuildContext ctx, index) {
+                return Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  child: InkWell(
+                    onTap: () {print("lol");},
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(noteList[index].title),
+                    ),
+                  )
+                );
+              }
+        ),
       )
     );
   }
