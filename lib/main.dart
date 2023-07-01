@@ -10,13 +10,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Assylzhan Notes App Demo',
+      title: 'Asyl Notes',
       theme: ThemeData(
         primarySwatch: Colors.lightGreen,
       ),
       debugShowCheckedModeBanner: false,
       scrollBehavior: const ConstantScrollBehavior(),
-      home: const MyHomePage(title: 'Assylzhan Notes App Demo'),
+      home: const MyHomePage(title: 'Asyl Notes'),
     );
   }
 }
@@ -40,7 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar(
             title: Text(widget.title),
             leading: currentNoteIndex < 0
-                ? const SizedBox.shrink()
+                ? const Icon(Icons.home)  //TODO: Create logo and add here
                 : IconButton(
                     icon: const Icon(Icons.arrow_back),
                     onPressed: () => setState(() {
@@ -118,6 +118,7 @@ class EditorPage extends StatelessWidget {
         TextField(
           controller: TextEditingController(text: note.title),
           decoration: const InputDecoration(hintText: "Title", border: OutlineInputBorder()),
+          onChanged: (value) {note.title = value;},
           //TODO: create thicker border and bold text
         ),
         const SizedBox(
@@ -130,6 +131,7 @@ class EditorPage extends StatelessWidget {
             maxLines: null,
             controller: TextEditingController(text: note.text),
             decoration: const InputDecoration(hintText: "Text", border: OutlineInputBorder()),
+            onChanged: (value) {note.text = value;},
           ),
         ),
       ],
