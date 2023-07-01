@@ -63,7 +63,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     //   child: Text("#$noteNum"),
                     // );
                     return Card(
-
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      child: InkWell(
+                        onTap: () {print("lol");},
+                      )
                     );
                   }
             ),
