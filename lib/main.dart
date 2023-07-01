@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Assylzhan Notes App Demo',
       theme: ThemeData(
         primarySwatch: Colors.lightGreen,
       ),
@@ -38,15 +38,17 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.title),
-          leading: currentNoteIndex >= 0 ? IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => setState(() {
-                currentNoteIndex = -1;
-            }),
-          ) : const SizedBox.shrink()
-        ),
+            title: Text(widget.title),
+            leading: currentNoteIndex >= 0
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => setState(() {
+                      currentNoteIndex = -1;
+                    }),
+                  )
+                : const SizedBox.shrink()),
         floatingActionButton: FloatingActionButton(
+          // TODO: disappear in editor page
           backgroundColor: Colors.green,
           onPressed: () {
             setState(() {
@@ -56,14 +58,14 @@ class _MyHomePageState extends State<MyHomePage> {
           child: const Icon(Icons.plus_one),
         ),
         body: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
+          padding: const EdgeInsets.all(8),
           child: currentNoteIndex < 0
               ? NoteListPage(
                   noteList: noteList,
                   onNoteSelected: (index) => setState(() {
                         currentNoteIndex = index;
                       }))
-              : EditorPage(),
+              : EditorPage(noteList[currentNoteIndex]),
         ));
   }
 }
@@ -104,11 +106,32 @@ class NoteListPage extends StatelessWidget {
 }
 
 class EditorPage extends StatelessWidget {
-  const EditorPage({super.key});
+  final Note note;
+  const EditorPage(this.note, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Text("Editor Page");
+    return Column(
+      children: [
+        TextField(
+          controller: TextEditingController(text: note.title),
+          decoration: const InputDecoration(border: OutlineInputBorder()),
+          //TODO: create thicker border and bold text
+        ),
+        const SizedBox(
+          height: 8,
+        ),
+        Expanded(
+          child: TextField(
+            textAlignVertical: TextAlignVertical.top,
+            expands: true,
+            maxLines: null,
+            controller: TextEditingController(text: note.text),
+            decoration: const InputDecoration(border: OutlineInputBorder()),
+          ),
+        ),
+      ],
+    );
   }
 }
 
