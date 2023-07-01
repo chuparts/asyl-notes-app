@@ -32,6 +32,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<Note> noteList = [Note("loltitle", "loltext"), Note("hello", "world!")];
 
+  int currentNoteIndex = -1;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,18 +51,23 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         body: Padding(
           padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
-          child: NoteListPage(noteList: noteList),
+          child: currentNoteIndex < 0
+              ? NoteListPage(
+                  noteList: noteList,
+                  onNoteSelected: (index) => setState(() {
+                        currentNoteIndex = index;
+                      }))
+              : EditorPage(),
         ));
   }
 }
 
 class NoteListPage extends StatelessWidget {
-  const NoteListPage({
-    super.key,
-    required this.noteList,
-  });
+  const NoteListPage(
+      {super.key, required this.noteList, required this.onNoteSelected});
 
   final List<Note> noteList;
+  final Function(int) onNoteSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +85,8 @@ class NoteListPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20)),
               child: InkWell(
                 onTap: () {
-                  print("lol");
+                  // print("lol");
+                  onNoteSelected.call(index);
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
