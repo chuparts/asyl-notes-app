@@ -39,24 +39,25 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
         appBar: AppBar(
             title: Text(widget.title),
-            leading: currentNoteIndex >= 0
-                ? IconButton(
+            leading: currentNoteIndex < 0
+                ? const SizedBox.shrink()
+                : IconButton(
                     icon: const Icon(Icons.arrow_back),
                     onPressed: () => setState(() {
                       currentNoteIndex = -1;
                     }),
-                  )
-                : const SizedBox.shrink()),
-        floatingActionButton: FloatingActionButton(
-          // TODO: disappear in editor page
-          backgroundColor: Colors.green,
-          onPressed: () {
-            setState(() {
-              noteList.add(Note("New note", "New note text"));
-            });
-          },
-          child: const Icon(Icons.plus_one),
-        ),
+                  )),
+        floatingActionButton: currentNoteIndex >= 0
+            ? null
+            : FloatingActionButton(
+                backgroundColor: Colors.green,
+                onPressed: () {
+                  setState(() {
+                    noteList.add(Note("New note", "New note text"));
+                  });
+                },
+                child: const Icon(Icons.plus_one),
+              ),
         body: Padding(
           padding: const EdgeInsets.all(8),
           child: currentNoteIndex < 0
