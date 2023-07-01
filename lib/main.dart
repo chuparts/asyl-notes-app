@@ -30,10 +30,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  
-  int notesNumber = 0;  //temporary
-  int noteNum = 0;  //temporary
 
+
+  List<Note> noteList = [Note("loltitle", "loltext"), Note("hello", "world!")];
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       childAspectRatio: 3 / 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10),
-                  itemCount: notesNumber,
+                  itemCount: noteList.length,
                   itemBuilder: (BuildContext ctx, index) {
                     // return Container(
                     //   alignment: Alignment.center,
@@ -66,6 +65,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       child: InkWell(
                         onTap: () {print("lol");},
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Text(noteList[index].title),
+                        ),
                       )
                     );
                   }
@@ -83,8 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         backgroundColor: Colors.green,
                         onPressed: () {
                             setState(() {
-                          notesNumber++;
-                          noteNum++;
+                              noteList.add(Note("New note", "New note text"));
                           });
                         },
                         child: const Icon(Icons.plus_one),
@@ -106,8 +108,15 @@ class EditorPage extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    return Text("Editor Page");
+    return const Text("Editor Page");
   }
+}
+
+class Note {
+  String title;
+  String text;
+
+  Note(this.title, this.text);
 }
 
 class ConstantScrollBehavior extends ScrollBehavior {
