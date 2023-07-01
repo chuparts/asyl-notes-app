@@ -53,7 +53,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 backgroundColor: Colors.green,
                 onPressed: () {
                   setState(() {
-                    noteList.add(Note("New note", "New note text"));
+                    noteList.add(Note("", ""));
+                    currentNoteIndex = noteList.length - 1;
                   });
                 },
                 child: const Icon(Icons.plus_one),
@@ -90,16 +91,16 @@ class NoteListPage extends StatelessWidget {
         itemCount: noteList.length,
         itemBuilder: (BuildContext ctx, index) {
           return Card(
+            //TODO: make every new note colourful
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
               child: InkWell(
                 onTap: () {
-                  // print("lol");
                   onNoteSelected.call(index);
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Text(noteList[index].title),
+                  child: Text(noteList[index].title.isEmpty ? "No title" : noteList[index].title),
                 ),
               ));
         });
@@ -116,7 +117,7 @@ class EditorPage extends StatelessWidget {
       children: [
         TextField(
           controller: TextEditingController(text: note.title),
-          decoration: const InputDecoration(border: OutlineInputBorder()),
+          decoration: const InputDecoration(hintText: "Title", border: OutlineInputBorder()),
           //TODO: create thicker border and bold text
         ),
         const SizedBox(
@@ -128,7 +129,7 @@ class EditorPage extends StatelessWidget {
             expands: true,
             maxLines: null,
             controller: TextEditingController(text: note.text),
-            decoration: const InputDecoration(border: OutlineInputBorder()),
+            decoration: const InputDecoration(hintText: "Text", border: OutlineInputBorder()),
           ),
         ),
       ],
