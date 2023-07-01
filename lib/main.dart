@@ -49,29 +49,43 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         body: Padding(
           padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
-          child: GridView.builder(
-              shrinkWrap: true,
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 200,
-                  childAspectRatio: 3 / 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10),
-              itemCount: noteList.length,
-              itemBuilder: (BuildContext ctx, index) {
-                return Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                    child: InkWell(
-                      onTap: () {
-                        print("lol");
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(noteList[index].title),
-                      ),
-                    ));
-              }),
+          child: NoteListPage(noteList: noteList),
         ));
+  }
+}
+
+class NoteListPage extends StatelessWidget {
+  const NoteListPage({
+    super.key,
+    required this.noteList,
+  });
+
+  final List<Note> noteList;
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+        shrinkWrap: true,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 200,
+            childAspectRatio: 3 / 2,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10),
+        itemCount: noteList.length,
+        itemBuilder: (BuildContext ctx, index) {
+          return Card(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              child: InkWell(
+                onTap: () {
+                  print("lol");
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(noteList[index].title),
+                ),
+              ));
+        });
   }
 }
 
