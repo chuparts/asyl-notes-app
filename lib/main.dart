@@ -45,15 +45,29 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-            title: Text(widget.title),
-            leading: currentNoteId < 0
-                ? const Icon(Icons.home) //TODO: Create logo and add here
+          title: Text(widget.title),
+          leading: currentNoteId < 0
+              ? const Icon(Icons.home) //TODO: Create logo and add here
+              : IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => setState(() {
+                    currentNoteId = -1;
+                  }),
+                ),
+          actions: [
+            currentNoteId < 0
+                ? const SizedBox()
                 : IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => setState(() {
-                      currentNoteId = -1;
-                    }),
-                  )),
+                    icon: const Icon(Icons.delete),
+                    onPressed: () async {
+                      await db.delete("notes", where: "id = $currentNoteId");
+                      setState(() {
+                        currentNoteId = -1;
+                      });
+                    },
+                  ),
+          ],
+        ),
         floatingActionButton: currentNoteId >= 0
             ? null
             : FloatingActionButton(
@@ -78,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 return Text("Loading...");
               }
               for (Map m in snapshot.data!) {
-                  notes.add(Note(m["id"], m["title"], m["note_text"]));
+                notes.add(Note(m["id"], m["title"], m["note_text"]));
               }
               if (currentNoteId < 0) {
                 return NoteListPage(
@@ -166,7 +180,8 @@ class EditorPage extends StatelessWidget {
             decoration: const InputDecoration(
                 hintText: "Text", border: OutlineInputBorder()),
             onChanged: (value) {
-              db.update("notes", {"note_text": value}, where: "id = ${note.id}");
+              db.update("notes", {"note_text": value},
+                  where: "id = ${note.id}");
             },
           ),
         ),
