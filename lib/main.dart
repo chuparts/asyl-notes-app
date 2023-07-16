@@ -150,7 +150,7 @@ class EditorPage extends StatelessWidget {
           decoration: const InputDecoration(
               hintText: "Title", border: OutlineInputBorder()),
           onChanged: (value) {
-            note.title = value;
+            db.update("notes", {"title": value}, where: "id = ${note.id}");
           },
           //TODO: create thicker border and bold text
         ),
@@ -166,7 +166,7 @@ class EditorPage extends StatelessWidget {
             decoration: const InputDecoration(
                 hintText: "Text", border: OutlineInputBorder()),
             onChanged: (value) {
-              note.text = value;
+              db.update("notes", {"note_text": value}, where: "id = ${note.id}");
             },
           ),
         ),
