@@ -74,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 backgroundColor: Colors.green,
                 onPressed: () async {
                   int noteId = await db.insert(
-                      "notes", {"title": "lol", "note_text": "lol text"});
+                      "notes", {"title": "", "note_text": ""});
                   setState(() {
                     currentNoteId = noteId;
                   });
