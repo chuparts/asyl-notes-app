@@ -5,10 +5,11 @@ late Database db;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  db = await openDatabase('asyl_notes_database.db', version: 1, onCreate: (Database db, int version) async {
-  await db.execute(
-      'CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT, note_text TEXT)');
-});
+  db = await openDatabase('asyl_notes_database.db', version: 1,
+      onCreate: (Database db, int version) async {
+    await db.execute(
+        'CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT, note_text TEXT)');
+  });
   runApp(const MyApp());
 }
 
@@ -38,44 +39,63 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Note> noteList = [Note("loltitle", "loltext"), Note("hello", "world!")];
-
-  int currentNoteIndex = -1;
+  int currentNoteId = -1;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
             title: Text(widget.title),
-            leading: currentNoteIndex < 0
-                ? const Icon(Icons.home)  //TODO: Create logo and add here
+            leading: currentNoteId < 0
+                ? const Icon(Icons.home) //TODO: Create logo and add here
                 : IconButton(
                     icon: const Icon(Icons.arrow_back),
                     onPressed: () => setState(() {
-                      currentNoteIndex = -1;
+                      currentNoteId = -1;
                     }),
                   )),
-        floatingActionButton: currentNoteIndex >= 0
+        floatingActionButton: currentNoteId >= 0
             ? null
             : FloatingActionButton(
                 backgroundColor: Colors.green,
-                onPressed: () {
+                onPressed: () async {
+                  int noteId = await db.insert(
+                      "notes", {"title": "lol", "note_text": "lol text"});
                   setState(() {
-                    noteList.add(Note("", ""));
-                    currentNoteIndex = noteList.length - 1;
+                    currentNoteId = noteId;
                   });
                 },
                 child: const Icon(Icons.plus_one),
               ),
         body: Padding(
           padding: const EdgeInsets.all(8),
-          child: currentNoteIndex < 0
-              ? NoteListPage(
-                  noteList: noteList,
-                  onNoteSelected: (index) => setState(() {
-                        currentNoteIndex = index;
-                      }))
-              : EditorPage(noteList[currentNoteIndex]),
+          child: FutureBuilder<List<Map>>(
+            future: db.query("notes"),
+            builder:
+                (BuildContext context2, AsyncSnapshot<List<Map>> snapshot) {
+              List<Note> notes = [];
+              if (!snapshot.hasData) {
+                return Text("Loading...");
+              }
+              for (Map m in snapshot.data!) {
+                  notes.add(Note(m["id"], m["title"], m["note_text"]));
+              }
+              if (currentNoteId < 0) {
+                return NoteListPage(
+                    noteList: notes,
+                    onNoteSelected: (index) => setState(() {
+                          currentNoteId = notes[index].id;
+                        }));
+              } else {
+                for (Note n in notes) {
+                  if (n.id == currentNoteId) {
+                    return EditorPage(n);
+                  }
+                }
+                return Text("Note not found");
+              }
+            },
+          ),
         ));
   }
 }
@@ -99,7 +119,7 @@ class NoteListPage extends StatelessWidget {
         itemCount: noteList.length,
         itemBuilder: (BuildContext ctx, index) {
           return Card(
-            //TODO: make every new note colourful
+              //TODO: make every new note colourful
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20)),
               child: InkWell(
@@ -108,7 +128,9 @@ class NoteListPage extends StatelessWidget {
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Text(noteList[index].title.isEmpty ? "No title" : noteList[index].title),
+                  child: Text(noteList[index].title.isEmpty
+                      ? "No title"
+                      : noteList[index].title),
                 ),
               ));
         });
@@ -125,8 +147,11 @@ class EditorPage extends StatelessWidget {
       children: [
         TextField(
           controller: TextEditingController(text: note.title),
-          decoration: const InputDecoration(hintText: "Title", border: OutlineInputBorder()),
-          onChanged: (value) {note.title = value;},
+          decoration: const InputDecoration(
+              hintText: "Title", border: OutlineInputBorder()),
+          onChanged: (value) {
+            note.title = value;
+          },
           //TODO: create thicker border and bold text
         ),
         const SizedBox(
@@ -138,8 +163,11 @@ class EditorPage extends StatelessWidget {
             expands: true,
             maxLines: null,
             controller: TextEditingController(text: note.text),
-            decoration: const InputDecoration(hintText: "Text", border: OutlineInputBorder()),
-            onChanged: (value) {note.text = value;},
+            decoration: const InputDecoration(
+                hintText: "Text", border: OutlineInputBorder()),
+            onChanged: (value) {
+              note.text = value;
+            },
           ),
         ),
       ],
@@ -148,10 +176,11 @@ class EditorPage extends StatelessWidget {
 }
 
 class Note {
+  int id;
   String title;
   String text;
 
-  Note(this.title, this.text);
+  Note(this.id, this.title, this.text);
 }
 
 class ConstantScrollBehavior extends ScrollBehavior {
