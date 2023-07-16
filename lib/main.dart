@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 
-void main() {
+late Database db;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  db = await openDatabase('asyl_notes_database.db', version: 1, onCreate: (Database db, int version) async {
+  await db.execute(
+      'CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT, note_text TEXT)');
+});
   runApp(const MyApp());
 }
 
