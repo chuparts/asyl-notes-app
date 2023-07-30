@@ -97,6 +97,10 @@ class _MyHomePageState extends State<MyHomePage> {
               for (Map m in snapshot.data!) {
                 notes.add(Note(m["id"], m["title"], m["note_text"]));
               }
+              if (notes.isEmpty)
+              {
+                return EmptyNotesPage();
+              }
               if (currentNoteId < 0) {
                 return NoteListPage(
                     noteList: notes,
@@ -114,6 +118,19 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           ),
         ));
+  }
+}
+
+class EmptyNotesPage extends StatelessWidget {
+  const EmptyNotesPage({super.key});
+
+  @override
+  Widget build(BuildContext context)
+  {
+    return const Padding(
+      padding: EdgeInsets.all(16.0),
+      child: Text("No notes", style: TextStyle(fontSize: 20),)
+    );
   }
 }
 
