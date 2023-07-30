@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 late Database db;
 
 void main() async {
+  GoogleFonts.config.allowRuntimeFetching = false;  //disabling HTTP requests
   WidgetsFlutterBinding.ensureInitialized();
   db = await openDatabase('asyl_notes_database.db', version: 1,
       onCreate: (Database db, int version) async {
@@ -22,6 +24,7 @@ class MyApp extends StatelessWidget {
       title: 'Asyl Notes',
       theme: ThemeData(
         primarySwatch: Colors.lightGreen,
+        fontFamily: 'JosefinSans',
       ),
       debugShowCheckedModeBanner: false,
       scrollBehavior: const ConstantScrollBehavior(),
