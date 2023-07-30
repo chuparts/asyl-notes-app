@@ -128,7 +128,7 @@ class EmptyNotesPage extends StatelessWidget {
     return const Padding(
         padding: EdgeInsets.all(16.0),
         child: Text(
-          "No notes",
+          "No notes...",
           style: TextStyle(fontSize: 20),
         ));
   }
@@ -169,15 +169,20 @@ class NoteListPage extends StatelessWidget {
                         noteList[index].title.isEmpty
                             ? "No title"
                             : noteList[index].title,
+                        maxLines: 1,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       const SizedBox(
                         height: 16,
                       ),
-                      Text(noteList[index].text.isEmpty
-                          ? ""
-                          : noteList[index].text, maxLines: 3, style: const TextStyle(color: Colors.black38),),
+                      Text(
+                        noteList[index].text.isEmpty
+                            ? ""
+                            : noteList[index].text,
+                        maxLines: 3,
+                        style: const TextStyle(color: Colors.black38),
+                      ),
                     ],
                   ),
                 ),
@@ -195,6 +200,7 @@ class EditorPage extends StatelessWidget {
     return Column(
       children: [
         TextField(
+          maxLength: 45,
           controller: TextEditingController(text: note.title),
           decoration: const InputDecoration(
               hintText: "Title", border: OutlineInputBorder()),
@@ -208,6 +214,7 @@ class EditorPage extends StatelessWidget {
         ),
         Expanded(
           child: TextField(
+            maxLength: 2000,
             textAlignVertical: TextAlignVertical.top,
             expands: true,
             maxLines: null,
