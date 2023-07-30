@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 late Database db;
 
 void main() async {
-  GoogleFonts.config.allowRuntimeFetching = false;  //disabling HTTP requests
+  GoogleFonts.config.allowRuntimeFetching = false; //disabling HTTP requests
   WidgetsFlutterBinding.ensureInitialized();
   db = await openDatabase('asyl_notes_database.db', version: 1,
       onCreate: (Database db, int version) async {
@@ -76,8 +76,8 @@ class _MyHomePageState extends State<MyHomePage> {
             : FloatingActionButton(
                 backgroundColor: Colors.green,
                 onPressed: () async {
-                  int noteId = await db.insert(
-                      "notes", {"title": "", "note_text": ""});
+                  int noteId =
+                      await db.insert("notes", {"title": "", "note_text": ""});
                   setState(() {
                     currentNoteId = noteId;
                   });
@@ -97,8 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
               for (Map m in snapshot.data!) {
                 notes.add(Note(m["id"], m["title"], m["note_text"]));
               }
-              if (notes.isEmpty)
-              {
+              if (notes.isEmpty) {
                 return EmptyNotesPage();
               }
               if (currentNoteId < 0) {
@@ -125,12 +124,13 @@ class EmptyNotesPage extends StatelessWidget {
   const EmptyNotesPage({super.key});
 
   @override
-  Widget build(BuildContext context)
-  {
+  Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.all(16.0),
-      child: Text("No notes", style: TextStyle(fontSize: 20),)
-    );
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+          "No notes",
+          style: TextStyle(fontSize: 20),
+        ));
   }
 }
 
@@ -162,9 +162,24 @@ class NoteListPage extends StatelessWidget {
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Text(noteList[index].title.isEmpty
-                      ? "No title"
-                      : noteList[index].title),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        noteList[index].title.isEmpty
+                            ? "No title"
+                            : noteList[index].title,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      const SizedBox(
+                        height: 16,
+                      ),
+                      Text(noteList[index].text.isEmpty
+                          ? ""
+                          : noteList[index].text, maxLines: 3, style: const TextStyle(color: Colors.black38),),
+                    ],
+                  ),
                 ),
               ));
         });
