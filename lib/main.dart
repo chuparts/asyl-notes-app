@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:animations/animations.dart';
 
 late Database db;
 
@@ -152,41 +153,43 @@ class NoteListPage extends StatelessWidget {
             mainAxisSpacing: 10),
         itemCount: noteList.length,
         itemBuilder: (BuildContext ctx, index) {
-          return Card(
-              //TODO: make every new note colourful
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              child: InkWell(
-                onTap: () {
-                  onNoteSelected.call(index);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        noteList[index].title.isEmpty
-                            ? "No title"
-                            : noteList[index].title,
-                        maxLines: 1,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      const SizedBox(
-                        height: 16,
-                      ),
-                      Text(
-                        noteList[index].text.isEmpty
-                            ? ""
-                            : noteList[index].text,
-                        maxLines: 3,
-                        style: const TextStyle(color: Colors.black38),
-                      ),
-                    ],
-                  ),
+          return OpenContainer(
+            openBuilder: (context, closedContainer) {return EditorPage(noteList[index]);},
+            closedShape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+            closedBuilder: (context, openContainer){return InkWell(
+              onTap: () {
+                //onNoteSelected.call(index);
+                openContainer();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      noteList[index].title.isEmpty
+                          ? "No title"
+                          : noteList[index].title,
+                      maxLines: 1,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(
+                      height: 16,
+                    ),
+                    Text(
+                      noteList[index].text.isEmpty
+                          ? ""
+                          : noteList[index].text,
+                      maxLines: 3,
+                      style: const TextStyle(color: Colors.black38),
+                    ),
+                  ],
                 ),
-              ));
+              ),
+            );},
+          );
         });
   }
 }
