@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:animations/animations.dart';
 
 late Database db;
 var title = "Asyl Notes";
+late int noteNum;
 
 void main() async {
-  GoogleFonts.config.allowRuntimeFetching = false; //disabling HTTP requests
   WidgetsFlutterBinding.ensureInitialized();
   db = await openDatabase('asyl_notes_database.db', version: 1,
       onCreate: (Database db, int version) async {
     await db.execute(
         'CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT, note_text TEXT)');
   });
+  List<Map> notes = await db.query("notes");
+  noteNum = notes.length;
   runApp(const MyApp());
 }
 
@@ -48,49 +49,36 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int currentNoteId = -1;
 
   @override
   Widget build(BuildContext context) {
-    // var appState = context.watch<MyAppState>();
+    var appState = context.watch<MyAppState>();
     return Scaffold(
         appBar: AppBar(
           title: Text(widget.title),
           leading: const Icon(Icons.home),
-          //     ? const Icon(Icons.home) //TODO: Create logo and add here
-          //     : IconButton(
-          //         icon: const Icon(Icons.arrow_back),
-          //         onPressed: () => setState(() {
-          //           currentNoteId = -1;
-          //         }),
-          //       ),
-          // actions: [
-          //   currentNoteId < 0
-          //       ? const SizedBox()
-          //       : IconButton(
-          //           icon: const Icon(Icons.delete),
-          //           onPressed: () async {
-          //             await db.delete("notes", where: "id = $currentNoteId");
-          //             setState(() {
-          //               currentNoteId = -1;
-          //             });
-          //           },
-          //         ),
-          // ],
         ),
-        floatingActionButton: currentNoteId >= 0
-            ? null
-            : FloatingActionButton(
-                backgroundColor: Colors.green,
-                onPressed: () async {
-                  int noteId =
-                      await db.insert("notes", {"title": "", "note_text": ""});
-                  setState(() {
-                    currentNoteId = noteId;
-                  });
-                },
-                child: const Icon(Icons.plus_one),
-              ),
+        floatingActionButton: FloatingActionButton(
+            backgroundColor: Colors.green,
+            child: const Icon(Icons.plus_one),
+            onPressed: () async {
+              int noteId =
+                  await db.insert("notes", {"title": "", "note_text": ""});
+              noteNum++;
+              List<Note> notes = [];
+              List<Map> map = await db.query("notes");
+              for (Map m in map) {
+                notes.add(Note(m["id"], m["title"], m["note_text"]));
+              }
+              Note toBeOpened = notes[noteNum - 1];
+              setState(() {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => EditorPage(toBeOpened)),
+                );
+              });
+            }),
         body: Padding(
           padding: const EdgeInsets.all(8),
           child: FutureBuilder<List<Map>>(
@@ -107,59 +95,57 @@ class _MyHomePageState extends State<MyHomePage> {
               if (notes.isEmpty) {
                 return const EmptyNotesPage();
               }
-                return GridView.builder(
-                    shrinkWrap: true,
-                    gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 200,
-                            childAspectRatio: 3 / 2,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10),
-                    itemCount: notes.length,
-                    itemBuilder: (BuildContext ctx, index) {
-                      return OpenContainer(
-                        openBuilder: (context, closeContainer) {
-                          return EditorPage(notes[index]);
-                        },
-                        closedShape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)),
-                        closedBuilder: (context, openContainer) {
-                          return InkWell(
-                            onTap: () {
-                              openContainer();
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    notes[index].title.isEmpty
-                                        ? "No title"
-                                        : notes[index].title,
-                                    maxLines: 1,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16),
-                                  ),
-                                  const SizedBox(
-                                    height: 16,
-                                  ),
-                                  Text(
-                                    notes[index].text.isEmpty
-                                        ? ""
-                                        : notes[index].text,
-                                    maxLines: 3,
-                                    style:
-                                        const TextStyle(color: Colors.black38),
-                                  ),
-                                ],
-                              ),
+              return GridView.builder(
+                  shrinkWrap: true,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 200,
+                      childAspectRatio: 3 / 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10),
+                  itemCount: notes.length,
+                  itemBuilder: (BuildContext ctx, index) {
+                    return OpenContainer(
+                      openBuilder: (context, closeContainer) {
+                        return EditorPage(notes[index]);
+                      },
+                      closedShape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      closedBuilder: (context, openContainer) {
+                        return InkWell(
+                          onTap: () {
+                            openContainer();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  notes[index].title.isEmpty
+                                      ? "No title"
+                                      : notes[index].title,
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16),
+                                ),
+                                const SizedBox(
+                                  height: 16,
+                                ),
+                                Text(
+                                  notes[index].text.isEmpty
+                                      ? ""
+                                      : notes[index].text,
+                                  maxLines: 3,
+                                  style: const TextStyle(color: Colors.black38),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                      );
-                    });
+                          ),
+                        );
+                      },
+                    );
+                  });
             },
           ),
         ));
@@ -167,8 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class MyAppState extends ChangeNotifier {
-  void update()
-  {
+  void update() {
     notifyListeners();
   }
 }
@@ -206,14 +191,15 @@ class EditorPage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () async {
-                      await db.delete("notes", where: "id = ${note.id}");
-                      appState.update();
-                      Navigator.pop(context);
-                    },
-                  ),
-          ],
+            icon: const Icon(Icons.delete),
+            onPressed: () async {
+              await db.delete("notes", where: "id = ${note.id}");
+              noteNum--;
+              appState.update();
+              Navigator.pop(context);
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
