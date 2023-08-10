@@ -49,7 +49,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -208,12 +207,17 @@ class EditorPage extends StatelessWidget {
             TextField(
               maxLength: 45,
               controller: TextEditingController(text: note.title),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               decoration: const InputDecoration(
-                  hintText: "Title", border: OutlineInputBorder()),
+                  hintText: "Title",
+                  border: OutlineInputBorder(
+                      borderSide: BorderSide(width: 1)),
+                  enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(width: 1)),
+                      ),
               onChanged: (value) {
                 db.update("notes", {"title": value}, where: "id = ${note.id}");
               },
-              //TODO: create thicker border and bold text
             ),
             const SizedBox(
               height: 8,
