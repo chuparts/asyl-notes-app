@@ -193,6 +193,9 @@ class EditorPage extends StatelessWidget {
             icon: const Icon(Icons.delete),
             onPressed: () async {
               await db.delete("notes", where: "id = ${note.id}");
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("The note was deleted."))
+              );
               noteNum--;
               appState.update();
               Navigator.pop(context);
