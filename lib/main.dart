@@ -6,6 +6,7 @@ import 'package:animations/animations.dart';
 late Database db;
 var title = "Asyl Notes";
 late int noteNum;
+late MaterialColor theme;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,12 +17,18 @@ void main() async {
   });
   List<Map> notes = await db.query("notes");
   noteNum = notes.length;
+  theme = Colors.lightGreen;
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -29,7 +36,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: title,
         theme: ThemeData(
-          primarySwatch: Colors.lightGreen,
+          primarySwatch: theme,
           fontFamily: 'JosefinSans',
         ),
         debugShowCheckedModeBanner: false,
@@ -56,9 +63,38 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar(
           title: Text(widget.title),
           leading: const Icon(Icons.home),
+          actions: [
+            PopupMenuButton<MaterialColor>(
+              initialValue: Colors.green,
+              onSelected: (MaterialColor color) {
+                setState(() {
+                  appState.changeThemeColor(color);
+                });
+              },
+              itemBuilder: (BuildContext context) =>
+                  <PopupMenuEntry<MaterialColor>>[
+                const PopupMenuItem<MaterialColor>(
+                  value: Colors.lightGreen,
+                  child: Text('Green'),
+                ),
+                const PopupMenuItem<MaterialColor>(
+                  value: Colors.lightBlue,
+                  child: Text('Blue'),
+                ),
+                const PopupMenuItem<MaterialColor>(
+                  value: Colors.amber,
+                  child: Text('Amber'),
+                ),
+                const PopupMenuItem<MaterialColor>(
+                  value: Colors.red,
+                  child: Text('Red'),
+                ),
+              ],
+            )
+          ],
         ),
         floatingActionButton: FloatingActionButton(
-            backgroundColor: Colors.green,
+            backgroundColor: theme,
             child: const Icon(Icons.plus_one),
             onPressed: () async {
               int noteId =
@@ -152,7 +188,14 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class MyAppState extends ChangeNotifier {
+  MaterialColor themecolor = Colors.lightGreen;
   void update() {
+    notifyListeners();
+  }
+  void changeThemeColor(MaterialColor color)
+  {
+    theme = color;
+    themecolor = color;
     notifyListeners();
   }
 }
@@ -194,8 +237,7 @@ class EditorPage extends StatelessWidget {
             onPressed: () async {
               await db.delete("notes", where: "id = ${note.id}");
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("The note was deleted."))
-              );
+                  const SnackBar(content: Text("The note was deleted.")));
               noteNum--;
               appState.update();
               Navigator.pop(context);
@@ -212,12 +254,11 @@ class EditorPage extends StatelessWidget {
               controller: TextEditingController(text: note.title),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               decoration: const InputDecoration(
-                  hintText: "Title",
-                  border: OutlineInputBorder(
-                      borderSide: BorderSide(width: 1)),
-                  enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(width: 1)),
-                      ),
+                hintText: "Title",
+                border: OutlineInputBorder(borderSide: BorderSide(width: 1)),
+                enabledBorder:
+                    OutlineInputBorder(borderSide: BorderSide(width: 1)),
+              ),
               onChanged: (value) {
                 db.update("notes", {"title": value}, where: "id = ${note.id}");
               },
