@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -10,11 +12,17 @@ late MaterialColor theme;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  db = await openDatabase('asyl_notes_database.db', version: 1,
-      onCreate: (Database db, int version) async {
-    await db.execute(
-        'CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT, note_text TEXT)');
-  });
+  db = await openDatabase(
+    'asyl_notes_database.db',
+    version: 3,
+    onCreate: (Database db, int version) async {
+      await db.execute(
+          'CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT, note_text TEXT, in_trash INTEGER)');
+    },
+  );
+  // db.rawQuery("ALTER TABLE notes ADD in_trash INTEGER");
+  // db.delete("notes");
+  //databaseFactory.deleteDatabase( await databaseFactory.getDatabasesPath());
   List<Map> notes = await db.query("notes");
   noteNum = notes.length;
   theme = Colors.lightGreen;
@@ -64,6 +72,25 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title),
           leading: const Icon(Icons.home),
           actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => TrashPage()),
+                  );
+                },
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.delete,
+                      color: Colors.black,
+                    ),
+                    Text(
+                      "Trash",
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ],
+                )),
             PopupMenuButton<MaterialColor>(
               initialValue: Colors.green,
               onSelected: (MaterialColor color) {
@@ -90,20 +117,21 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Text('Red'),
                 ),
               ],
-            )
+            ),
           ],
         ),
         floatingActionButton: FloatingActionButton(
             backgroundColor: theme,
             child: const Icon(Icons.plus_one),
             onPressed: () async {
-              int noteId =
-                  await db.insert("notes", {"title": "", "note_text": ""});
+              int noteId = await db.insert(
+                  "notes", {"title": "", "note_text": "", "in_trash": "0"});
               noteNum++;
               List<Note> notes = [];
-              List<Map> map = await db.query("notes");
+              List<Map> map = await db.query("notes", where: "in_trash = 0");
               for (Map m in map) {
-                notes.add(Note(m["id"], m["title"], m["note_text"]));
+                notes.add(
+                    Note(m["id"], m["title"], m["note_text"], m["in_trash"]));
               }
               Note toBeOpened = notes[noteNum - 1];
               setState(() {
@@ -117,7 +145,7 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Padding(
           padding: const EdgeInsets.all(8),
           child: FutureBuilder<List<Map>>(
-            future: db.query("notes"),
+            future: db.query("notes", where: "in_trash = 0"),
             builder:
                 (BuildContext context2, AsyncSnapshot<List<Map>> snapshot) {
               List<Note> notes = [];
@@ -125,7 +153,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 return const Text("Loading...", style: TextStyle(fontSize: 20));
               }
               for (Map m in snapshot.data!) {
-                notes.add(Note(m["id"], m["title"], m["note_text"]));
+                  notes.add(
+                      Note(m["id"], m["title"], m["note_text"], m["in_trash"]));
               }
               if (notes.isEmpty) {
                 return const EmptyNotesPage();
@@ -192,11 +221,104 @@ class MyAppState extends ChangeNotifier {
   void update() {
     notifyListeners();
   }
-  void changeThemeColor(MaterialColor color)
-  {
+
+  void changeThemeColor(MaterialColor color) {
     theme = color;
     themecolor = color;
     notifyListeners();
+  }
+}
+
+class TrashPage extends StatefulWidget {
+  const TrashPage({super.key});
+
+  @override
+  State<TrashPage> createState() => _TrashPageState();
+}
+
+class _TrashPageState extends State<TrashPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Trash Bin"),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8),
+        child: FutureBuilder<List<Map>>(
+          future: db.query("notes", where: "in_trash = 1"),
+          builder: (BuildContext context2, AsyncSnapshot<List<Map>> snapshot) {
+            List<Note> notes = [];
+            if (!snapshot.hasData) {
+              return const Text("Loading...", style: TextStyle(fontSize: 20));
+            }
+            for (Map m in snapshot.data!) {
+              notes.add(
+                  Note(m["id"], m["title"], m["note_text"], m["in_trash"]));
+            }
+            if (notes.isEmpty) {
+              return const EmptyNotesPage();
+            }
+            return GridView.builder(
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 200,
+                    childAspectRatio: 3 / 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10),
+                itemCount: notes.length,
+                itemBuilder: (BuildContext ctx, index) {
+                  return OpenContainer(
+                    openBuilder: (context, closeContainer) {
+                      return EditorPage(notes[index]);
+                    },
+                    closedShape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                    closedBuilder: (context, openContainer) {
+                      return InkWell(
+                        onTap: () {
+                          openContainer();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                notes[index].title.isEmpty
+                                    ? "No title"
+                                    : notes[index].title,
+                                maxLines: 1,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              const SizedBox(
+                                height: 16,
+                              ),
+                              Text(
+                                notes[index].text.isEmpty
+                                    ? ""
+                                    : notes[index].text,
+                                maxLines: 3,
+                                style: const TextStyle(color: Colors.black38),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                });
+          },
+        ),
+      ),
+    );
   }
 }
 
@@ -235,11 +357,13 @@ class EditorPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () async {
-              await db.delete("notes", where: "id = ${note.id}");
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("The note was deleted.")));
-              noteNum--;
+              //await db.delete("notes", where: "id = ${note.id}");
+              await db.update("notes", {"in_trash": 1},
+                  where: "id = ${note.id}");
               appState.update();
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("The note was put in Trash.")));
+              noteNum--;
               Navigator.pop(context);
             },
           ),
@@ -292,8 +416,9 @@ class Note {
   int id;
   String title;
   String text;
+  int inTrash;
 
-  Note(this.id, this.title, this.text);
+  Note(this.id, this.title, this.text, this.inTrash);
 }
 
 class ConstantScrollBehavior extends ScrollBehavior {
