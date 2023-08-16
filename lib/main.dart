@@ -153,8 +153,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 return const Text("Loading...", style: TextStyle(fontSize: 20));
               }
               for (Map m in snapshot.data!) {
-                  notes.add(
-                      Note(m["id"], m["title"], m["note_text"], m["in_trash"]));
+                notes.add(
+                    Note(m["id"], m["title"], m["note_text"], m["in_trash"]));
               }
               if (notes.isEmpty) {
                 return const EmptyNotesPage();
@@ -248,6 +248,27 @@ class _TrashPageState extends State<TrashPage> {
             Navigator.pop(context);
           },
         ),
+        actions: [
+          TextButton(
+                onPressed: () async {
+                  await db.delete("notes", where: "in_trash = 1");
+                  setState(() {});
+                  ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("The notes in Trash were deleted.")));
+                },
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.delete,
+                      color: Colors.black,
+                    ),
+                    Text(
+                      "Trash",
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ],
+                )),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(8),
