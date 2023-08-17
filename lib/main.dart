@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
@@ -23,7 +25,7 @@ void main() async {
   // db.rawQuery("ALTER TABLE notes ADD in_trash INTEGER");
   // db.delete("notes");
   //databaseFactory.deleteDatabase( await databaseFactory.getDatabasesPath());
-  List<Map> notes = await db.query("notes");
+  List<Map> notes = await db.query("notes", where: "in_trash = 0");
   noteNum = notes.length;
   theme = Colors.lightGreen;
   runApp(const MyApp());
@@ -76,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => TrashPage()),
+                    MaterialPageRoute(builder: (context) => const TrashPage()),
                   );
                 },
                 child: const Row(
@@ -124,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
             backgroundColor: theme,
             child: const Icon(Icons.plus_one),
             onPressed: () async {
-              int noteId = await db.insert(
+              await db.insert(
                   "notes", {"title": "", "note_text": "", "in_trash": "0"});
               noteNum++;
               List<Note> notes = [];
@@ -239,35 +241,36 @@ class TrashPage extends StatefulWidget {
 class _TrashPageState extends State<TrashPage> {
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
     return Scaffold(
       appBar: AppBar(
-        title: Text("Trash Bin"),
+        title: const Text("Trash Bin"),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
         actions: [
           TextButton(
-                onPressed: () async {
-                  await db.delete("notes", where: "in_trash = 1");
-                  setState(() {});
-                  ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("The notes in Trash were deleted.")));
-                },
-                child: const Row(
-                  children: [
-                    Icon(
-                      Icons.delete,
-                      color: Colors.black,
-                    ),
-                    Text(
-                      "Trash",
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  ],
-                )),
+              onPressed: () async {
+                await db.delete("notes", where: "in_trash = 1");
+                setState(() {});
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("The notes in Trash were deleted.")));
+              },
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.delete,
+                    color: Colors.black,
+                  ),
+                  Text(
+                    "Delete all notes",
+                    style: TextStyle(color: Colors.black),
+                  ),
+                ],
+              )),
         ],
       ),
       body: Padding(
@@ -297,7 +300,7 @@ class _TrashPageState extends State<TrashPage> {
                 itemBuilder: (BuildContext ctx, index) {
                   return OpenContainer(
                     openBuilder: (context, closeContainer) {
-                      return EditorPage(notes[index]);
+                      return NoteTrashView(notes[index]);
                     },
                     closedShape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20)),
@@ -343,6 +346,92 @@ class _TrashPageState extends State<TrashPage> {
   }
 }
 
+class NoteTrashView extends StatelessWidget {
+  final Note note;
+  const NoteTrashView(this.note, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await db.update("notes", {"in_trash": 0}, where: "id = ${note.id}");
+              appState.update();
+              noteNum++;
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("The note was deleted.")));
+              Navigator.pop(context);
+            },
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.arrow_circle_left_outlined,
+                  color: Colors.black,
+                ),
+                Text(
+                  "Restore",
+                  style: TextStyle(color: Colors.black),
+                )
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              await db.delete("notes", where: "id = ${note.id}");
+              appState.update();
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("The note was deleted.")));
+              Navigator.pop(context);
+            },
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.delete,
+                  color: Colors.black,
+                ),
+                Text(
+                  "Delete",
+                  style: TextStyle(color: Colors.black),
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              note.title.isEmpty ? "No title" : note.title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),overflow: TextOverflow.clip
+            ),
+            const SizedBox(
+              height: 8,
+            ),
+            Expanded(
+              child: Text(
+                note.text.isEmpty ? "No text" : note.text, overflow: TextOverflow.clip,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class EmptyNotesPage extends StatelessWidget {
   const EmptyNotesPage({super.key});
 
@@ -378,7 +467,6 @@ class EditorPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () async {
-              //await db.delete("notes", where: "id = ${note.id}");
               await db.update("notes", {"in_trash": 1},
                   where: "id = ${note.id}");
               appState.update();
