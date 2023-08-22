@@ -10,7 +10,7 @@ import 'package:animations/animations.dart';
 late Database db;
 var title = "Asyl Notes";
 late int noteNum;
-late MaterialColor theme;
+late MaterialColor colorTheme;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,23 +22,33 @@ void main() async {
           'CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT, note_text TEXT, in_trash INTEGER)');
     },
   );
-  // db.rawQuery("ALTER TABLE notes ADD in_trash INTEGER");
-  // db.delete("notes");
-  //databaseFactory.deleteDatabase( await databaseFactory.getDatabasesPath());
+  // await db.execute('CREATE TABLE color_theme (id INTEGER PRIMARY KEY)');
+  // await db.insert("color_theme", {"id": 1});
+  // await db.execute("ALTER TABLE color_theme ADD color_number INTEGER");
+  // await db.update("color_theme", {"color_number": 0}, where: "id = 1");
   List<Map> notes = await db.query("notes", where: "in_trash = 0");
   noteNum = notes.length;
-  theme = Colors.lightGreen;
+  colorTheme = await getColor();
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
+Future<MaterialColor> getColor() async {
+  List<Map> map = await db.query("color_theme", where: "id = 1");
+  int colorNum = map[0]["color_number"];
+  if (colorNum == 0) {
+    return Colors.lightGreen;
+  } else if (colorNum == 1) {
+    return Colors.lightBlue;
+  } else if (colorNum == 2) {
+    return Colors.amber;
+  } else {
+    return Colors.red;
+  }
 }
 
-class _MyAppState extends State<MyApp> {
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -46,7 +56,7 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         title: title,
         theme: ThemeData(
-          primarySwatch: theme,
+          primarySwatch: colorTheme,
           fontFamily: 'JosefinSans',
         ),
         debugShowCheckedModeBanner: false,
@@ -58,7 +68,10 @@ class _MyAppState extends State<MyApp> {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({
+    super.key,
+    required this.title,
+  });
   final String title;
 
   @override
@@ -93,37 +106,81 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ],
                 )),
-            PopupMenuButton<MaterialColor>(
-              initialValue: Colors.green,
-              onSelected: (MaterialColor color) {
-                setState(() {
-                  appState.changeThemeColor(color);
-                });
+            PopupMenuButton<int>(
+              initialValue: 0,
+              onSelected: (int colorNum) async {
+                await db.update("color_theme", {"color_number": colorNum},
+                    where: "id = 1");
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("The theme will change after app restart.")));
               },
-              itemBuilder: (BuildContext context) =>
-                  <PopupMenuEntry<MaterialColor>>[
-                const PopupMenuItem<MaterialColor>(
-                  value: Colors.lightGreen,
-                  child: Text('Green'),
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<int>>[
+                PopupMenuItem<int>(
+                  value: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        height: 16,
+                        width: 16,
+                        decoration: const BoxDecoration(
+                            shape: BoxShape.circle, color: Colors.lightGreen),
+                      ),
+                      const Text('Green'),
+                    ],
+                  ),
                 ),
-                const PopupMenuItem<MaterialColor>(
-                  value: Colors.lightBlue,
-                  child: Text('Blue'),
+                PopupMenuItem<int>(
+                  value: 1,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        height: 16,
+                        width: 16,
+                        decoration: const BoxDecoration(
+                            shape: BoxShape.circle, color: Colors.lightBlue),
+                      ),
+                      const Text('Blue'),
+                    ],
+                  ),
                 ),
-                const PopupMenuItem<MaterialColor>(
-                  value: Colors.amber,
-                  child: Text('Amber'),
+                PopupMenuItem<int>(
+                  value: 2,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        height: 16,
+                        width: 16,
+                        decoration: const BoxDecoration(
+                            shape: BoxShape.circle, color: Colors.amber),
+                      ),
+                      const Text('Amber'),
+                    ],
+                  ),
                 ),
-                const PopupMenuItem<MaterialColor>(
-                  value: Colors.red,
-                  child: Text('Red'),
+                PopupMenuItem<int>(
+                  value: 3,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        height: 16,
+                        width: 16,
+                        decoration: const BoxDecoration(
+                            shape: BoxShape.circle, color: Colors.red),
+                      ),
+                      const Text('Red'),
+                    ],
+                  ),
                 ),
               ],
             ),
           ],
         ),
         floatingActionButton: FloatingActionButton(
-            backgroundColor: theme,
+            backgroundColor: colorTheme,
             child: const Icon(Icons.plus_one),
             onPressed: () async {
               await db.insert(
@@ -219,14 +276,7 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class MyAppState extends ChangeNotifier {
-  MaterialColor themecolor = Colors.lightGreen;
   void update() {
-    notifyListeners();
-  }
-
-  void changeThemeColor(MaterialColor color) {
-    theme = color;
-    themecolor = color;
     notifyListeners();
   }
 }
@@ -254,10 +304,16 @@ class _TrashPageState extends State<TrashPage> {
         actions: [
           TextButton(
               onPressed: () async {
-                await db.delete("notes", where: "in_trash = 1");
+                int notesDeleted =
+                    await db.delete("notes", where: "in_trash = 1");
                 setState(() {});
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("The notes in Trash were deleted.")));
+                if (notesDeleted == 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("The Trash is empty.")));
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("The notes in Trash were deleted.")));
+                }
               },
               child: const Row(
                 children: [
@@ -365,7 +421,8 @@ class NoteTrashView extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () async {
-              await db.update("notes", {"in_trash": 0}, where: "id = ${note.id}");
+              await db.update("notes", {"in_trash": 0},
+                  where: "id = ${note.id}");
               appState.update();
               noteNum++;
               ScaffoldMessenger.of(context).showSnackBar(
@@ -413,16 +470,17 @@ class NoteTrashView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              note.title.isEmpty ? "No title" : note.title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),overflow: TextOverflow.clip
-            ),
+            Text(note.title.isEmpty ? "No title" : note.title,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                overflow: TextOverflow.clip),
             const SizedBox(
               height: 8,
             ),
             Expanded(
               child: Text(
-                note.text.isEmpty ? "No text" : note.text, overflow: TextOverflow.clip,
+                note.text.isEmpty ? "No text" : note.text,
+                overflow: TextOverflow.clip,
               ),
             ),
           ],
